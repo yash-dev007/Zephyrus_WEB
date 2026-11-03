@@ -1,0 +1,52 @@
+/* ────────────────────────────────────────────────────────────
+   Motion layer — tokens, pre-paint states, Motion overrides.
+   Loaded after the inline stylesheet so these win by order.
+   The animation itself lives in assets/js/main.js.
+   ──────────────────────────────────────────────────────────── */
+
+:root {
+  /* Same curve the inline sheet uses for UI motion, promoted to a named
+     token so JS can hand Motion the identical value. */
+  --ease-out-strong: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Lenis owns smooth scrolling; native smooth would fight it and break the
+   anchor tween. Without JS (or with reduced motion) this stays native. */
+html.lenis { scroll-behavior: auto; }
+
+/* Pre-paint state for scroll-triggered reveals. Motion animates from these
+   values and removes the attribute when done, so hover transforms underneath
+   are never blocked by leftover inline styles. */
+.js:not(.reduce) [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  will-change: opacity, transform;
+}
+
+/* The nav pill slides on a Motion spring; size stays on a short CSS tween
+   (it is absolutely positioned, so it never reflows the links). */
+.nav-slider {
+  transition: width 320ms var(--ease-out-strong), height 320ms var(--ease-out-strong);
+}
+
+/* Softer pop for the module tiles — never scale(0). */
+.js:not(.reduce) .avatar-grid .module-tile {
+  transform: scale(0.86);
+}
+
+/* ── Hover motion only where a real pointer exists ──────────
+   Touch devices fire `:hover` on tap, which reads as a stuck, lifted card. */
+@media (hover: none) {
+  .book-btn:hover,
+  .book-bar:hover,
+  .trust-card:hover,
+  .footer-btn:hover,
+  .scroll-cue:hover .arrow-disc {
+    transform: none;
+  }
+  .portrait-card:hover img { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.lenis { scroll-behavior: auto; }
+}

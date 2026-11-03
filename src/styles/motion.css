@@ -1,0 +1,156 @@
+/* Lenis base styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch],
+.lenis [data-lenis-prevent-vertical],
+.lenis [data-lenis-prevent-horizontal] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+.lenis.lenis-autoToggle {
+  transition-property: overflow;
+  transition-duration: 1ms;
+  transition-behavior: allow-discrete;
+}
+
+/* Hero entrance ---------------------------------------------------------- */
+@keyframes nav-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, calc(-16 * var(--u)), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes title-in {
+  from {
+    transform: translateY(106%);
+  }
+  to {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes photo-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, calc(40 * var(--u)), 0);
+    filter: blur(calc(14 * var(--u)));
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, calc(14 * var(--u)), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.js:not(.reduce) .nav {
+  animation: nav-in 820ms var(--ease-out-strong) 40ms backwards;
+}
+
+.js:not(.reduce) .title-inner {
+  animation: title-in 1000ms var(--ease-out-strong) 120ms backwards;
+}
+
+.js:not(.reduce) .photo-rise {
+  animation: photo-in 1300ms var(--ease-out-strong) 100ms backwards;
+}
+
+.js:not(.reduce) .rise {
+  animation: rise-in 780ms var(--ease-out-strong) var(--rise-delay, 360ms) backwards;
+}
+
+/* Scroll reveals --------------------------------------------------------- */
+.js:not(.reduce) [data-reveal] {
+  opacity: 0;
+  translate: 0 var(--reveal-y, 26px);
+  transition:
+    opacity 900ms var(--ease-out-strong) var(--reveal-delay, 0ms),
+    translate 900ms var(--ease-out-strong) var(--reveal-delay, 0ms);
+  will-change: opacity, translate;
+}
+
+.js:not(.reduce) [data-reveal][data-revealed] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* Module tiles ----------------------------------------------------------- */
+.avatar-grid .module-tile {
+  transition:
+    opacity 520ms ease,
+    transform 760ms var(--ease-out-strong);
+}
+
+.js:not(.reduce) .avatar-grid .module-tile {
+  opacity: 0;
+  transform: scale(0.86);
+}
+
+.js:not(.reduce) .trust-live .avatar-grid .module-tile {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Hover motion only where a real pointer exists -------------------------- */
+@media (hover: none) {
+  .book-btn:hover,
+  .book-bar:hover,
+  .trust-card:hover,
+  .footer-btn:hover,
+  .scroll-cue:hover .arrow-disc {
+    transform: none;
+  }
+
+  .portrait-card:hover img {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.lenis {
+    scroll-behavior: auto;
+  }
+
+  .js .rise,
+  .js .title-inner,
+  .js .nav,
+  .js .photo-rise {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .js .avatar-grid .module-tile {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
