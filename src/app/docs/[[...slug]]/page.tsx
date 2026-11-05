@@ -4,7 +4,13 @@ import { DocsPage } from "@/components/docs/DocsPage";
 import { getDocVersions } from "@/lib/docs";
 import { source } from "@/lib/source";
 
-export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
+type DocsPageProps = {
+  params: Promise<{
+    slug?: string[];
+  }>;
+};
+
+export default async function Page(props: DocsPageProps) {
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();
@@ -19,9 +25,7 @@ export function generateStaticParams() {
   return source.generateParams();
 }
 
-export async function generateMetadata(
-  props: PageProps<"/docs/[[...slug]]">,
-): Promise<Metadata> {
+export async function generateMetadata(props: DocsPageProps): Promise<Metadata> {
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();
