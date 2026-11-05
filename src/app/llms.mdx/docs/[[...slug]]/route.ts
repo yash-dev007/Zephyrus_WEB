@@ -5,10 +5,13 @@ import { source } from "@/lib/source";
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export async function GET(
-  _request: Request,
-  context: RouteContext<"/llms.mdx/docs/[[...slug]]">,
-) {
+type DocsRouteContext = {
+  params: Promise<{
+    slug?: string[];
+  }>;
+};
+
+export async function GET(_request: Request, context: DocsRouteContext) {
   const { slug } = await context.params;
   const slugs = slug?.slice(0, -1) ?? [];
   if (slugs.at(-1) === "index") slugs.pop();
