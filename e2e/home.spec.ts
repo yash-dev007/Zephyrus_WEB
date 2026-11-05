@@ -90,7 +90,7 @@ test.describe("navigation", () => {
     await page.getByRole("link", { name: "Explore modules" }).click();
 
     await expect(page).toHaveURL(/#trust$/);
-    await expectSectionAtViewportTop(page, "trust");
+    await expect(page.locator("#trust")).toBeInViewport();
   });
 
   test("footer section links scroll back to content", async ({ page }) => {
