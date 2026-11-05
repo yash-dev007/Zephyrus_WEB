@@ -1,0 +1,57 @@
+---
+title: Getting started on 1.0.x
+description: Install and run the 1.0.x release with Docker Compose.
+---
+
+The 1.0.x release runs as two containers: the FastAPI server and the web
+frontend. Both are defined in the repository's `docker-compose.yml`.
+
+## Requirements
+
+- Docker Engine 24+ with Compose v2.
+- 8 GB of RAM for a small local model.
+- A reachable model runtime, or a cloud provider key.
+
+## Start the stack
+
+<Steps>
+  <Step title="Check out the release">
+    ```bash title="Terminal"
+    git clone --branch v1.0.1 https://github.com/yash-dev007/Zephyrus
+    cd Zephyrus
+    ```
+  </Step>
+
+<Step title="Create the environment file">
+  ```bash title="Terminal" cp .env.example .env ```
+</Step>
+
+<Step title="Start the containers">
+  ```bash title="Terminal" docker compose up -d --build ```
+</Step>
+
+  <Step title="Open the workspace">
+    Visit [http://localhost:7000](http://localhost:7000). The health endpoint is
+    `/api/health`.
+  </Step>
+</Steps>
+
+## Verify
+
+```bash title="Terminal"
+curl http://localhost:7000/api/health
+docker compose ps
+```
+
+Both `zephyrus-api` and `zephyrus-web` should report a running state.
+
+<Callout title="Upgrading from 1.0.x" type="info">
+  Back up `data/` before upgrading. Newer releases run database migrations on startup and
+  the 1.0.x data directory is upgraded in place.
+</Callout>
+
+## Next steps
+
+- Read the [1.0.x configuration reference](/docs/v1/configuration).
+- Browse the [1.0.x HTTP API](/docs/v1/api).
+- Switch to the [current documentation](/docs/) for newer features.

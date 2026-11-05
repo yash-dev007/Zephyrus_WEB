@@ -1,0 +1,49 @@
+---
+title: Modules
+description: The sixteen integrated modules that make up a Zephyrus workspace.
+---
+
+Zephyrus is one server with a set of cooperating modules. Modules share the same
+database, model router and tool registry, so a conversation can move from chat
+to research to documents without exporting anything.
+
+## Module map
+
+| Module    | What it does                       | State  |
+| --------- | ---------------------------------- | ------ |
+| Chat      | Streaming conversations with tools | Stable |
+| Memory    | Long-term facts and retrieval      | Stable |
+| Research  | Multi-source web research          | Stable |
+| Documents | Upload, parse and query files      | Stable |
+| Email     | Read, draft and send mail          | Stable |
+| Calendar  | Read and create events             | Stable |
+| Tasks     | Durable background jobs            | Stable |
+| MCP tools | External tool servers              | Stable |
+
+<Callout title="Everything is local by default" type="tip">
+  Module state is stored under `data/`. Cloud providers are only used when a request
+  explicitly selects one.
+</Callout>
+
+## Shared primitives
+
+All modules use the same building blocks:
+
+- **Model router** — one interface for local and cloud providers.
+- **Tool registry** — typed tools with JSON Schema inputs.
+- **Memory store** — embeddings plus structured facts.
+- **Event log** — durable records for long-running work.
+
+## Explore a module
+
+<Cards>
+  <Card title="Chat" href="/docs/modules/chat">
+    Streaming responses, tool calls and conversation history.
+  </Card>
+  <Card title="Memory" href="/docs/modules/memory">
+    How facts are extracted, stored and recalled.
+  </Card>
+  <Card title="Research" href="/docs/modules/research">
+    Source discovery, fetching and citation.
+  </Card>
+</Cards>

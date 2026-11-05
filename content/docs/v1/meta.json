@@ -1,0 +1,6 @@
+{
+  "title": "1.0.x",
+  "root": "version",
+  "description": "Documentation for Zephyrus 1.0.x",
+  "pages": ["index", "getting-started", "configuration", "api"]
+}

@@ -1,0 +1,64 @@
+---
+title: HTTP API on 1.0.x
+description: The stable HTTP endpoints exposed by the Zephyrus 1.0.x server.
+---
+
+The 1.0.x API is a small JSON surface served by the same FastAPI process as the
+web app. All routes are rooted at `/api`.
+
+## Health
+
+```bash title="Terminal"
+curl http://localhost:7000/api/health
+```
+
+```json title="Response"
+{
+  "status": "ok",
+  "version": "1.0.1"
+}
+```
+
+## Chat completions
+
+```bash title="Terminal"
+curl -X POST http://localhost:7000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Summarise the workspace","stream":false}'
+```
+
+<Callout title="Streaming is the default" type="info">
+  Set `"stream": false` for a single JSON response. Streaming responses use server-sent
+  events on the same endpoint.
+</Callout>
+
+## Documents
+
+| Method   | Path                  | Description                       |
+| -------- | --------------------- | --------------------------------- |
+| `GET`    | `/api/documents`      | List indexed documents            |
+| `POST`   | `/api/documents`      | Upload and index a file           |
+| `DELETE` | `/api/documents/{id}` | Remove a document and its vectors |
+
+## Memory
+
+| Method   | Path                 | Description                 |
+| -------- | -------------------- | --------------------------- |
+| `GET`    | `/api/memory`        | List stored facts           |
+| `POST`   | `/api/memory/search` | Semantic search over memory |
+| `DELETE` | `/api/memory/{id}`   | Delete a fact               |
+
+## Errors
+
+Errors return a JSON body with a `detail` field and a matching HTTP status:
+
+```json title="404"
+{
+  "detail": "Document not found"
+}
+```
+
+## Related
+
+- [1.0.x configuration](/docs/v1/configuration)
+- [Current MCP tools guide](/docs/mcp-tools)

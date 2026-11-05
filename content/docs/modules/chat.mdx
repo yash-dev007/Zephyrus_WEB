@@ -1,0 +1,66 @@
+---
+title: Chat
+description: Streaming conversations, tool calls and context management.
+---
+
+Chat is the default entry point. It streams model output, can call registered
+tools, and writes every turn to the local conversation store.
+
+## A conversation lifecycle
+
+<Steps>
+  <Step title="Build context">
+    The server loads the system prompt, recent turns and any memory the user has
+    enabled. Context is trimmed to the selected model's window.
+  </Step>
+
+<Step title="Route the model">
+  The model router resolves the selected provider and model. Local runtimes are preferred
+  when configured.
+</Step>
+
+<Step title="Stream and call tools">
+  Tokens stream to the browser. Tool calls pause the stream, execute through the tool
+  registry, then resume with the result.
+</Step>
+
+  <Step title="Persist">
+    The final turn, tool calls and citations are written to SQLite. Nothing is
+    sent to a hosted service.
+  </Step>
+</Steps>
+
+## Model selection
+
+The composer lists every available model. Local models are grouped separately
+from cloud models, and the current context window is shown next to each entry.
+
+```bash title="Terminal"
+curl http://localhost:7000/api/models
+```
+
+## Tool calls
+
+Tools are declared with a name, description and JSON Schema. The model decides
+when to call them; the server validates arguments before execution.
+
+<Callout title="Tools run with your permissions" type="warn">
+  A tool can read files or call an external API. Review the tool list before enabling
+  autonomous agents, and prefer read-only tools for research tasks.
+</Callout>
+
+## Context management
+
+- Recent turns are always included.
+- Older turns are summarized when the window fills.
+- Memory results are injected only when memory is enabled for the conversation.
+- Uploaded documents are retrieved per query rather than pasted in full.
+
+## Keyboard shortcuts
+
+| Shortcut        | Action               |
+| --------------- | -------------------- |
+| `Enter`         | Send message         |
+| `Shift + Enter` | New line             |
+| `Cmd/Ctrl + K`  | Search the workspace |
+| `Esc`           | Stop streaming       |

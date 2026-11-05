@@ -1,0 +1,49 @@
+---
+title: Zephyrus 1.0.x
+description: Archived documentation for the 1.0.x release line.
+---
+
+<Callout title="Archived version" type="warn">
+  You are reading the 1.0.x documentation. It is kept for reference and does not receive
+  new features. Use the version switcher to open the current docs.
+</Callout>
+
+Zephyrus 1.0.x is the first stable release of the local-first AI harness. It
+ships the core workspace — chat, memory, research and documents — on a single
+FastAPI server with Docker Compose as the supported deployment path.
+
+## What shipped in 1.0
+
+- Chat with streaming responses and tool calls.
+- Long-term memory backed by a local vector store.
+- Multi-source research through SearXNG.
+- Document upload, parsing and retrieval.
+- Local model runtimes through Ollama and OpenAI-compatible endpoints.
+
+## Install
+
+```bash title="Terminal"
+git clone --branch v1.0.1 https://github.com/yash-dev007/Zephyrus
+cd Zephyrus
+cp .env.example .env
+docker compose up -d --build
+```
+
+## Where to go next
+
+<Cards>
+  <Card title="Getting started" href="/docs/v1/getting-started">
+    Boot the 1.0.x stack and send a first message.
+  </Card>
+  <Card title="Configuration" href="/docs/v1/configuration">
+    The environment variables supported by 1.0.x.
+  </Card>
+  <Card title="HTTP API" href="/docs/v1/api">
+    Endpoints exposed by the 1.0.x server.
+  </Card>
+</Cards>
+
+## Current documentation
+
+The 1.0.x line is superseded by the current release. Start at the
+[latest docs](/docs/) for installation, providers and module guides.

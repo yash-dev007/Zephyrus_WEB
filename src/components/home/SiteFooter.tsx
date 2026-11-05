@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, type MouseEvent } from "react";
+import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { ExternalLink } from "@/components/ui/ExternalLink";
+import { Icon, icons } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { useSmoothScroll } from "@/components/providers/SmoothScrollProvider";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -54,13 +56,10 @@ export function SiteFooter() {
               <span className="footer-path">data/</span>.
             </Reveal>
             <Reveal as="div" className="footer-actions" delay={180}>
-              <ExternalLink
-                className="footer-btn primary"
-                href={siteConfig.docs}
-                showArrow
-              >
+              <Link className="footer-btn primary" href={siteConfig.docs}>
                 Setup guide
-              </ExternalLink>
+                <Icon icon={icons.arrowUp} className="arrow-ne" />
+              </Link>
               <ExternalLink
                 className="footer-btn ghost"
                 href={siteConfig.github}
@@ -144,12 +143,24 @@ export function SiteFooter() {
               delay={80 + columnIndex * 60}
             >
               <h3>{column.title}</h3>
-              {column.links.map((link) =>
-                link.external ? (
-                  <ExternalLink href={link.href} showArrow key={link.label}>
-                    {link.label}
-                  </ExternalLink>
-                ) : (
+              {column.links.map((link) => {
+                if (link.external) {
+                  return (
+                    <ExternalLink href={link.href} showArrow key={link.label}>
+                      {link.label}
+                    </ExternalLink>
+                  );
+                }
+
+                if (!link.href.startsWith("#")) {
+                  return (
+                    <Link href={link.href} key={link.label}>
+                      {link.label}
+                    </Link>
+                  );
+                }
+
+                return (
                   <a
                     href={link.href}
                     key={link.label}
@@ -157,8 +168,8 @@ export function SiteFooter() {
                   >
                     {link.label}
                   </a>
-                ),
-              )}
+                );
+              })}
             </Reveal>
           ))}
         </div>

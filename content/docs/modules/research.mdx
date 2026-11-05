@@ -1,0 +1,64 @@
+---
+title: Research
+description: Multi-source web research with citations and local notes.
+---
+
+Research runs a bounded loop: plan queries, fetch sources, read, synthesize and
+cite. It uses SearXNG by default, so searches go through your own instance
+rather than a hosted search API.
+
+## How a research run works
+
+<Steps>
+  <Step title="Plan">
+    The model decomposes the question into a small set of queries and a source
+    budget.
+  </Step>
+
+<Step title="Search">
+  SearXNG returns candidate URLs. Duplicates and low-quality domains are filtered before
+  fetching.
+</Step>
+
+<Step title="Read">
+  Pages are fetched, stripped of navigation and chunked. The model extracts claims and
+  supporting passages.
+</Step>
+
+<Step title="Synthesize">
+  Claims are grouped by theme. Conflicting sources are surfaced instead of silently
+  averaged.
+</Step>
+
+  <Step title="Cite">
+    Every claim keeps its source URL and passage. The final report includes
+    inline citations and a source list.
+  </Step>
+</Steps>
+
+## Configure search
+
+```dotenv
+SEARXNG_URL=http://localhost:8888
+RESEARCH_MAX_SOURCES=12
+RESEARCH_MAX_DEPTH=2
+```
+
+<Callout title="Respect robots and rate limits" type="warn">
+  Research fetches public pages. Keep concurrency low, honor `robots.txt`, and do not
+  point it at private networks without explicit permission.
+</Callout>
+
+## Output
+
+A research run produces:
+
+- A markdown report with inline citations.
+- A source table with titles, URLs and fetch timestamps.
+- Optional saved notes in the Documents module.
+
+## When to use research
+
+Use research for current events, comparisons and questions that need external
+evidence. For questions about your own files, use Documents and Memory instead;
+they are faster and stay entirely local.

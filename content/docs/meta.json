@@ -1,0 +1,18 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "installation",
+    "configuration",
+    "---Modules---",
+    "modules",
+    "providers",
+    "mcp-tools",
+    "---Operations---",
+    "self-hosting",
+    "troubleshooting",
+    "---Versions---",
+    "v1"
+  ]
+}

@@ -1,0 +1,45 @@
+---
+title: Introduction
+description: Zephyrus is a local-first AI harness that keeps your models, memory and data on your own machine.
+---
+
+Zephyrus brings agents, memory, research, email and tools into one self-hosted
+workspace. It runs on a single FastAPI server, stores its state under `data/`,
+and can talk to local runtimes such as Ollama or any OpenAI-compatible endpoint.
+
+<Callout title="Local-first by default" type="tip">
+  Every conversation, document embedding and memory record stays on the machine you run
+  Zephyrus on. Cloud providers are optional, never required.
+</Callout>
+
+## What you get
+
+- **Sixteen integrated modules** — chat, memory, research, email, calendar,
+  tasks, documents and MCP tools, plus the plumbing that connects them.
+- **Thirteen model providers** — local runtimes first, cloud APIs when you opt in.
+- **One workspace** — a single server, a single data directory, no SaaS account.
+
+## How this documentation is organised
+
+<Cards>
+  <Card title="Get started" href="/docs/getting-started">
+    Install Zephyrus, start the server and send your first message.
+  </Card>
+  <Card title="Configure" href="/docs/configuration">
+    Point Zephyrus at a model, choose an embedding backend and tune storage.
+  </Card>
+  <Card title="Extend" href="/docs/mcp-tools">
+    Connect MCP tools and wire your own agents into the workspace.
+  </Card>
+</Cards>
+
+## Quickstart
+
+```bash title="Terminal"
+git clone https://github.com/yash-dev007/Zephyrus
+cd zephyrus
+cp .env.example .env
+docker compose up -d --build
+```
+
+Open [http://localhost:7000](http://localhost:7000) when the containers are healthy.

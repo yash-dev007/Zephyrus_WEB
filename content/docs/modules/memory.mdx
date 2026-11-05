@@ -1,0 +1,64 @@
+---
+title: Memory
+description: How Zephyrus extracts, stores and recalls long-term memory.
+---
+
+Memory gives the workspace continuity across conversations. It combines
+structured facts with vector retrieval, and every write is visible and
+deletable by the user.
+
+## What gets stored
+
+- **Facts** — short statements such as a preference or a project detail.
+- **Episodes** — summaries of past conversations.
+- **Documents** — chunked text with embeddings for retrieval.
+
+<Callout title="Memory is opt-in per conversation" type="info">
+  A new chat does not read or write memory unless memory is enabled in the composer. This
+  keeps throwaway conversations out of long-term storage.
+</Callout>
+
+## Write path
+
+<Steps>
+  <Step title="Extract candidates">
+    After a turn, the extractor proposes facts worth remembering. Candidates are
+    short, self-contained and attributed to the conversation.
+  </Step>
+
+<Step title="Deduplicate">
+  New candidates are compared with existing facts. Near-duplicates are merged instead of
+  appended.
+</Step>
+
+  <Step title="Embed and store">
+    Facts and document chunks are embedded with the configured embedding model
+    and written to the vector store.
+  </Step>
+</Steps>
+
+## Read path
+
+When a conversation needs context, Zephyrus embeds the query and retrieves the
+closest facts and document chunks. Results are ranked, filtered by score and
+injected into the prompt with source labels.
+
+```bash title="Terminal"
+curl "http://localhost:7000/api/memory/search?q=deployment+target"
+```
+
+## Managing memory
+
+Open **Memory** to browse, edit or delete entries. Deleting a fact removes it
+from the store and from future retrieval. Re-index documents after changing the
+embedding model.
+
+## Limits
+
+| Setting            | Default | Purpose                    |
+| ------------------ | ------- | -------------------------- |
+| `MEMORY_MAX_FACTS` | 5000    | Cap on stored facts        |
+| `MEMORY_TOP_K`     | 8       | Results injected per query |
+| `MEMORY_MIN_SCORE` | 0.35    | Minimum similarity         |
+
+Tune these in `.env` and restart the API.

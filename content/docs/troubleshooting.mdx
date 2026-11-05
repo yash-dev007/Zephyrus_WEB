@@ -1,0 +1,67 @@
+---
+title: Troubleshooting
+description: Common startup, model, memory and networking problems.
+---
+
+Start with the health endpoint and the API logs. Most issues are a missing
+provider key, an unreachable model runtime or a data directory permission
+problem.
+
+## First checks
+
+```bash title="Terminal"
+curl http://localhost:7000/api/health
+docker compose logs --tail=200 zephyrus-api
+```
+
+## The workspace will not start
+
+| Symptom                      | Likely cause                    | Fix                                        |
+| ---------------------------- | ------------------------------- | ------------------------------------------ |
+| Port 7000 already in use     | Another process owns the port   | Change `ZEPHYRUS_PORT` or stop the process |
+| Permission denied on `data/` | Container user cannot write     | Fix ownership or run as the matching UID   |
+| Database migration failed    | Partial upgrade or corrupt file | Restore `data/` from backup                |
+
+## No models appear
+
+1. Confirm the runtime is reachable: `curl http://localhost:11434/api/tags`.
+2. Check `OLLAMA_BASE_URL` or `OPENAI_BASE_URL`.
+3. Restart the API after changing `.env`.
+4. Look for provider errors in the logs.
+
+<Callout title="Cloud models need a key" type="info">
+  A cloud provider is hidden until its API key is present. Adding a key to `.env` requires
+  a restart.
+</Callout>
+
+## Memory search returns nothing
+
+- Confirm documents finished indexing.
+- Check that the embedding model is reachable.
+- If you changed embedding models, re-index instead of mixing vectors.
+- Lower `MEMORY_MIN_SCORE` temporarily to see whether results exist.
+
+## Research fails to fetch pages
+
+- Verify `SEARXNG_URL` is reachable from the API container.
+- Check outbound network access and DNS.
+- Reduce concurrency if the target site rate-limits you.
+- Some sites block non-browser user agents; treat those as unavailable.
+
+## Reset a workspace
+
+<Callout title="This deletes local state" type="danger">
+  Stop the stack and move `data/` aside. There is no remote copy to restore from unless
+  you made a backup.
+</Callout>
+
+```bash title="Terminal"
+docker compose down
+mv data data.backup-$(date +%F)
+docker compose up -d
+```
+
+## Getting help
+
+Open an issue with the version, deployment method and the relevant log lines.
+Remove API keys and personal data before posting logs.

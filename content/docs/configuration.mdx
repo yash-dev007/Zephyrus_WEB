@@ -1,0 +1,116 @@
+---
+title: Configuration
+description: Providers, embeddings, storage and runtime settings for a Zephyrus workspace.
+---
+
+Configuration lives in `.env` for the server and in the workspace settings for
+per-user preferences. Environment values are read at startup; restart the API
+after changing them.
+
+## Environment file
+
+```dotenv title=".env"
+ZEPHYRUS_HOST=0.0.0.0
+ZEPHYRUS_PORT=7000
+ZEPHYRUS_DATA_DIR=./data
+
+# Local model runtime
+OLLAMA_BASE_URL=http://localhost:11434
+DEFAULT_MODEL=llama3.1:8b
+
+# Optional cloud provider
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+```
+
+<Callout title="Secrets stay on disk" type="warn">
+  `.env` is excluded from Git. Never commit API keys, and restrict the file to the user
+  that runs the server (`chmod 600 .env`).
+</Callout>
+
+## Model providers
+
+Providers are configured independently. A provider is available when its
+required environment variable is present and the server has been restarted.
+
+<Tabs items={["Ollama", "OpenAI-compatible", "Cloud"]}>
+  <Tab value="Ollama">
+    ```dotenv
+    OLLAMA_BASE_URL=http://localhost:11434
+    DEFAULT_MODEL=llama3.1:8b
+    ```
+
+    Pull the model first with `ollama pull llama3.1:8b`.
+
+  </Tab>
+
+  <Tab value="OpenAI-compatible">
+    ```dotenv
+    OPENAI_BASE_URL=http://localhost:8080/v1
+    OPENAI_API_KEY=local
+    DEFAULT_MODEL=your-model
+    ```
+
+    Works with vLLM, SGLang, llama.cpp server and LM Studio.
+
+  </Tab>
+
+  <Tab value="Cloud">
+    ```dotenv
+    OPENAI_API_KEY=sk-...
+    ANTHROPIC_API_KEY=sk-ant-...
+    GEMINI_API_KEY=...
+    ```
+
+    Cloud providers are opt-in. Requests only leave the machine when you select
+    a cloud model in the composer.
+
+  </Tab>
+</Tabs>
+
+## Embeddings and memory
+
+Memory search uses an embedding model. The default is a small local model; you
+can point it at a different runtime or a hosted embedding API.
+
+```dotenv
+EMBEDDING_PROVIDER=ollama
+EMBEDDING_MODEL=nomic-embed-text
+VECTOR_STORE=chroma
+CHROMA_DIR=./data/chroma
+```
+
+<Callout title="Changing embedding models" type="info">
+  Vectors from different models are not comparable. If you switch embedding models,
+  re-index documents and memories instead of mixing old and new vectors.
+</Callout>
+
+## Storage layout
+
+| Path               | Contents                           |
+| ------------------ | ---------------------------------- |
+| `data/zephyrus.db` | Conversations, tasks, settings     |
+| `data/uploads/`    | Uploaded documents and attachments |
+| `data/chroma/`     | Vector embeddings                  |
+| `data/logs/`       | Structured application logs        |
+
+Back up the whole `data/` directory. A database backup alone is not enough
+because uploaded files and vectors live beside it.
+
+## Runtime settings
+
+Workspace settings are stored in the database and can be changed without a
+restart:
+
+- Default model and temperature.
+- Whether new chats use memory automatically.
+- Research depth and source limits.
+- Email and calendar account connections.
+
+## Verify configuration
+
+```bash title="Terminal"
+curl http://localhost:7000/api/config/providers
+```
+
+The response lists configured providers without exposing their keys.

@@ -7,6 +7,7 @@ import "../styles/hero.css";
 import "../styles/content.css";
 import "../styles/footer.css";
 import "../styles/motion.css";
+import "../styles/docs.css";
 import { siteConfig, siteUrl } from "@/data/site";
 
 const bubbledot = localFont({

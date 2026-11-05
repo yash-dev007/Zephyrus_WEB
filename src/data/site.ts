@@ -14,7 +14,7 @@ export const siteConfig = {
   tagline: "Think · Explore · Create · Beyond",
   url: siteUrl,
   github: "https://github.com/yash-dev007/Zephyrus",
-  docs: "https://github.com/yash-dev007/Zephyrus/blob/main/docs/setup.md",
+  docs: "/docs/",
   releases: "https://github.com/yash-dev007/Zephyrus/releases",
   issues: "https://github.com/yash-dev007/Zephyrus/issues",
   readme: "https://github.com/yash-dev007/Zephyrus/blob/main/README.md",
@@ -35,22 +35,33 @@ export type NavItem =
       key: string;
       label: string;
       href: string;
+      kind: "section";
       sectionId: SectionId;
-      external?: false;
     }
   | {
       key: string;
       label: string;
       href: string;
-      external: true;
-      sectionId?: never;
+      kind: "route";
+    }
+  | {
+      key: string;
+      label: string;
+      href: string;
+      kind: "external";
     };
 
 export const navItems: ReadonlyArray<NavItem> = [
-  { key: "home", label: "Home", href: "#home", sectionId: "home" },
-  { key: "manifesto", label: "Overview", href: "#manifesto", sectionId: "manifesto" },
-  { key: "trust", label: "Modules", href: "#trust", sectionId: "trust" },
-  { key: "docs", label: "Docs", href: siteConfig.docs, external: true },
+  { key: "home", label: "Home", href: "#home", kind: "section", sectionId: "home" },
+  {
+    key: "manifesto",
+    label: "Overview",
+    href: "#manifesto",
+    kind: "section",
+    sectionId: "manifesto",
+  },
+  { key: "trust", label: "Modules", href: "#trust", kind: "section", sectionId: "trust" },
+  { key: "docs", label: "Docs", href: siteConfig.docs, kind: "route" },
 ];
 
 export const coreStack = ["FastAPI", "Ollama", "ChromaDB", "SearXNG"] as const;
@@ -124,7 +135,7 @@ export const footerColumns: ReadonlyArray<FooterColumn> = [
       { label: "Overview", href: "#manifesto" },
       { label: "Modules", href: "#trust" },
       { label: "Releases", href: siteConfig.releases, external: true },
-      { label: "Setup guide", href: siteConfig.docs, external: true },
+      { label: "Setup guide", href: siteConfig.docs },
     ],
   },
   {

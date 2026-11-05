@@ -1,0 +1,71 @@
+---
+title: MCP tools
+description: Connect Model Context Protocol servers and expose them to agents.
+---
+
+Zephyrus can use tools from any Model Context Protocol (MCP) server. Tools are
+registered once and then available to chat, research and agent workflows.
+
+## How tools are registered
+
+<Steps>
+  <Step title="Declare the server">
+    Add an MCP server to the workspace configuration with a command or URL.
+  </Step>
+
+<Step title="Discover tools">
+  On startup, Zephyrus asks the server for its tool list and JSON Schemas.
+</Step>
+
+<Step title="Validate calls">
+  Model-generated arguments are validated against the schema before the tool runs.
+</Step>
+
+  <Step title="Record results">
+    Tool calls and outputs are written to the conversation event log.
+  </Step>
+</Steps>
+
+## Example configuration
+
+```json title="mcp.json"
+{
+  "servers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./data"]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    }
+  }
+}
+```
+
+<Callout title="Scope tools to a directory" type="warn">
+  Filesystem tools can read and write whatever path you give them. Point them at a
+  dedicated directory such as `./data` rather than your home directory.
+</Callout>
+
+## Tool permissions
+
+Each server can be marked `read-only` or `read-write`. Read-only tools are
+preferred for research agents; write tools require an explicit approval step in
+the UI unless auto-approval is enabled.
+
+## Debugging a server
+
+```bash title="Terminal"
+curl http://localhost:7000/api/tools
+```
+
+This lists registered tools, their server, and their permission level. If a
+server is missing, check the API logs for the MCP handshake error.
+
+## Writing your own tool
+
+An MCP server is a small process that speaks JSON-RPC over stdio or HTTP. You
+can implement one in any language; the protocol handles discovery and schemas.
+Keep tool descriptions short and specific, because the model uses them to decide
+when to call.

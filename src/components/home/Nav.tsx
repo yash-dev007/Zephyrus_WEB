@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { navItems, type SectionId } from "@/data/site";
 import { useActiveSection } from "@/hooks/useActiveSection";
@@ -100,7 +101,7 @@ export function Nav() {
       const hash = window.location.hash;
       if (!hash) return;
       const item = navItems.find((entry) => entry.href === hash);
-      if (!item || item.external) return;
+      if (!item || item.kind !== "section") return;
       setActive(item.sectionId);
       scrollTo(hash);
     };
@@ -148,7 +149,7 @@ export function Nav() {
           onFocus: () => setFocusedKey(item.key),
         };
 
-        if (item.external) {
+        if (item.kind === "external") {
           return (
             <ExternalLink
               key={item.key}
@@ -158,6 +159,19 @@ export function Nav() {
             >
               {item.label}
             </ExternalLink>
+          );
+        }
+
+        if (item.kind === "route") {
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              {...commonProps}
+              aria-current={undefined}
+            >
+              {item.label}
+            </Link>
           );
         }
 

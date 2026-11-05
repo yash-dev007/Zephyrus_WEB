@@ -1,0 +1,109 @@
+---
+title: Getting started
+description: Go from a fresh clone to a working local workspace in a few minutes.
+---
+
+This guide assumes Docker is installed. If you prefer a native Python install,
+see [Installation](/docs/installation).
+
+## What you need
+
+- Docker Engine 24+ with Compose v2, or Python 3.11+ for a native install.
+- At least 8 GB of RAM if you plan to run a local model.
+- A model runtime. Ollama is the fastest path; any OpenAI-compatible endpoint
+  works too.
+
+<Callout title="No account required" type="tip">
+  Zephyrus does not call a hosted control plane. The first run only needs a model
+  endpoint; everything else is created locally under `data/`.
+</Callout>
+
+## Start the stack
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash title="Terminal"
+    git clone https://github.com/yash-dev007/Zephyrus
+    cd zephyrus
+    ```
+  </Step>
+
+  <Step title="Create your environment file">
+    ```bash title="Terminal"
+    cp .env.example .env
+    ```
+
+    Open `.env` and set at least one model provider. The defaults point at a
+    local Ollama instance on port `11434`.
+
+  </Step>
+
+  <Step title="Build and start the containers">
+    ```bash title="Terminal"
+    docker compose up -d --build
+    ```
+
+    The first build takes a few minutes. Watch the logs with
+    `docker compose logs -f`.
+
+  </Step>
+
+  <Step title="Open the workspace">
+    Visit [http://localhost:7000](http://localhost:7000). The API health check
+    is available at `/api/health`.
+  </Step>
+</Steps>
+
+## Send your first message
+
+1. Open **Chat** from the left rail.
+2. Pick a model in the composer. Local models appear automatically when Ollama
+   is reachable.
+3. Ask a question. The answer streams from the model, and the conversation is
+   stored in the local SQLite database.
+
+## Verify the install
+
+<Tabs items={["Health", "Containers", "Data"]}>
+  <Tab value="Health">
+    ```bash title="Terminal"
+    curl http://localhost:7000/api/health
+    ```
+
+    A healthy response includes `{"status":"ok"}` and the running version.
+
+  </Tab>
+
+  <Tab value="Containers">
+    ```bash title="Terminal"
+    docker compose ps
+    ```
+
+    `zephyrus-api`, `zephyrus-web` and the vector store should all be running.
+
+  </Tab>
+
+  <Tab value="Data">
+    ```bash title="Terminal"
+    ls data/
+    ```
+
+    The directory holds the SQLite database, uploads, embeddings and logs. Back
+    up this directory to back up the workspace.
+
+  </Tab>
+</Tabs>
+
+## Next steps
+
+<Cards>
+  <Card title="Configuration" href="/docs/configuration">
+    Choose providers, embeddings and storage locations.
+  </Card>
+  <Card title="Modules" href="/docs/modules">
+    Learn what each workspace module does.
+  </Card>
+  <Card title="MCP tools" href="/docs/mcp-tools">
+    Give agents access to external tools.
+  </Card>
+</Cards>

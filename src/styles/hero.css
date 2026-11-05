@@ -45,6 +45,22 @@
   pointer-events: none;
 }
 
+.media-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 68%,
+    rgba(5, 5, 5, 0.4) 80%,
+    rgba(5, 5, 5, 0.85) 92%,
+    #050505 100%
+  );
+}
+
 .photo-stage {
   position: absolute;
   left: calc(428 * var(--u));
@@ -54,6 +70,24 @@
   overflow: hidden;
   will-change: transform;
   z-index: 1;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 65%,
+    rgba(0, 0, 0, 0.85) 75%,
+    rgba(0, 0, 0, 0.45) 86%,
+    rgba(0, 0, 0, 0.12) 94%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 65%,
+    rgba(0, 0, 0, 0.85) 75%,
+    rgba(0, 0, 0, 0.45) 86%,
+    rgba(0, 0, 0, 0.12) 94%,
+    transparent 100%
+  );
 }
 
 .photo-rise,

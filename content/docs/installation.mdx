@@ -1,0 +1,88 @@
+---
+title: Installation
+description: Docker, native Python and development installs for Zephyrus.
+---
+
+Zephyrus ships as a Docker Compose stack and as a plain Python application. Use
+Docker for a reproducible deployment; use the native install when you want to
+edit the source or run it under an existing process manager.
+
+## Docker Compose
+
+```bash title="Terminal"
+git clone https://github.com/yash-dev007/Zephyrus
+cd zephyrus
+cp .env.example .env
+docker compose up -d --build
+```
+
+The stack exposes the workspace on port `7000` and stores state in `./data`.
+The compose file defines these services:
+
+<Files>
+  <Folder name="zephyrus">
+    <File name="docker-compose.yml" />
+    <File name=".env.example" />
+    <File name="data/" />
+    <File name="zephyrus/" />
+  </Folder>
+</Files>
+
+<Callout title="Keep data/ outside the image" type="warn">
+  The compose file mounts `./data` into the API container. Do not bake it into the image
+  or you will lose conversations, uploads and embeddings on rebuild.
+</Callout>
+
+## Native Python
+
+<Steps>
+  <Step title="Create a virtual environment">
+    ```bash title="Terminal"
+    python3.11 -m venv .venv
+    source .venv/bin/activate
+    ```
+  </Step>
+
+<Step title="Install dependencies">```bash title="Terminal" pip install -e . ```</Step>
+
+  <Step title="Configure and run">
+    ```bash title="Terminal"
+    cp .env.example .env
+    uvicorn zephyrus.main:app --host 0.0.0.0 --port 7000
+    ```
+  </Step>
+</Steps>
+
+On Windows, activate the environment with `.venv\Scripts\activate` and use
+`python` instead of `python3.11`.
+
+## Development install
+
+For work on the UI or API, run the server with reload enabled:
+
+```bash title="Terminal"
+uvicorn zephyrus.main:app --reload --port 7000
+```
+
+The frontend is served by the same FastAPI process in production. During
+development, the Vite dev server proxies `/api` to port `7000`.
+
+## Requirements
+
+| Component | Minimum | Notes                                |
+| --------- | ------- | ------------------------------------ |
+| Python    | 3.11    | 3.12 is supported                    |
+| Node.js   | 20      | Only needed for frontend development |
+| Docker    | 24      | Compose v2 required                  |
+| RAM       | 8 GB    | More for larger local models         |
+| Disk      | 5 GB    | Models and embeddings grow over time |
+
+## Updating
+
+```bash title="Terminal"
+git pull
+docker compose up -d --build
+```
+
+Database migrations run automatically on startup. Read the release notes before
+jumping major versions, and back up `data/` first.

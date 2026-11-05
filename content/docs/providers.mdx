@@ -1,0 +1,72 @@
+---
+title: Model providers
+description: Connect local runtimes and cloud APIs through one model router.
+---
+
+Zephyrus exposes a single model router. A provider is available when it is
+configured and reachable; the composer lists the resulting models together.
+
+## Local runtimes
+
+Local runtimes are the default and keep prompts on your machine.
+
+| Runtime          | Endpoint shape           | Notes                       |
+| ---------------- | ------------------------ | --------------------------- |
+| Ollama           | `http://localhost:11434` | Easiest local setup         |
+| vLLM             | OpenAI-compatible `/v1`  | High-throughput GPU serving |
+| SGLang           | OpenAI-compatible `/v1`  | Good for long context       |
+| llama.cpp server | OpenAI-compatible `/v1`  | CPU and small GPU setups    |
+| LM Studio        | OpenAI-compatible `/v1`  | Desktop app                 |
+
+```dotenv
+OLLAMA_BASE_URL=http://localhost:11434
+OPENAI_BASE_URL=http://localhost:8000/v1
+OPENAI_API_KEY=local
+```
+
+<Callout title="One interface, many runtimes" type="tip">
+  Any runtime that speaks the OpenAI chat completions API can be used by setting
+  `OPENAI_BASE_URL`. You do not need a provider-specific integration.
+</Callout>
+
+## Cloud providers
+
+Cloud providers are opt-in. Configure a key only if you want to use that
+provider.
+
+<Tabs items={["OpenAI", "Anthropic", "Gemini", "Groq / xAI / OpenRouter"]}>
+  <Tab value="OpenAI">```dotenv OPENAI_API_KEY=sk-... ```</Tab>
+  <Tab value="Anthropic">```dotenv ANTHROPIC_API_KEY=sk-ant-... ```</Tab>
+  <Tab value="Gemini">```dotenv GEMINI_API_KEY=... ```</Tab>
+  <Tab value="Groq / xAI / OpenRouter">
+    ```dotenv GROQ_API_KEY=... XAI_API_KEY=... OPENROUTER_API_KEY=... ```
+  </Tab>
+</Tabs>
+
+## Model routing
+
+The router resolves a model in this order:
+
+1. Explicit model selected in the request.
+2. Workspace default model.
+3. First available local model.
+4. First available cloud model.
+
+If no provider is reachable, chat returns a configuration error rather than
+falling back silently.
+
+## Checking availability
+
+```bash title="Terminal"
+curl http://localhost:7000/api/models
+```
+
+The response groups models by provider and includes context length and whether
+the model is local.
+
+## Cost and privacy
+
+- Local models have no per-token cost and never leave the machine.
+- Cloud models send the prompt to the provider you configured.
+- Research and memory use the same router, so provider choice applies to every
+  module.

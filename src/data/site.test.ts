@@ -10,7 +10,7 @@ import {
 describe("site data", () => {
   it("exposes the canonical project links", () => {
     expect(siteConfig.github).toMatch(/^https:\/\/github\.com\//);
-    expect(siteConfig.docs).toContain("/docs/setup.md");
+    expect(siteConfig.docs).toBe("/docs/");
     expect(siteConfig.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
@@ -18,11 +18,15 @@ describe("site data", () => {
     const keys = navItems.map((item) => item.key);
     expect(new Set(keys).size).toBe(keys.length);
 
-    const internal = navItems.filter((item) => !item.external);
-    expect(internal.every((item) => item.href.startsWith("#"))).toBe(true);
-    expect(internal.every((item) => Boolean(item.sectionId))).toBe(true);
+    const sections = navItems.filter((item) => item.kind === "section");
+    expect(sections.every((item) => item.href.startsWith("#"))).toBe(true);
+    expect(sections.every((item) => Boolean(item.sectionId))).toBe(true);
 
-    const external = navItems.filter((item) => item.external);
+    const routes = navItems.filter((item) => item.kind === "route");
+    expect(routes.every((item) => item.href.startsWith("/"))).toBe(true);
+    expect(routes.some((item) => item.href === siteConfig.docs)).toBe(true);
+
+    const external = navItems.filter((item) => item.kind === "external");
     expect(external.every((item) => item.href.startsWith("https://"))).toBe(true);
   });
 

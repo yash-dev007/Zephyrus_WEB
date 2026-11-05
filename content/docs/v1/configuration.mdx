@@ -1,0 +1,52 @@
+---
+title: Configuration on 1.0.x
+description: Environment variables and defaults supported by Zephyrus 1.0.x.
+---
+
+The 1.0.x server reads configuration from `.env` at startup. Restart the API
+container after changing values.
+
+## Core variables
+
+| Variable            | Default                  | Purpose                  |
+| ------------------- | ------------------------ | ------------------------ |
+| `ZEPHYRUS_HOST`     | `0.0.0.0`                | Bind address             |
+| `ZEPHYRUS_PORT`     | `7000`                   | HTTP port                |
+| `ZEPHYRUS_DATA_DIR` | `./data`                 | State directory          |
+| `DEFAULT_MODEL`     | `llama3.1:8b`            | Model used for new chats |
+| `OLLAMA_BASE_URL`   | `http://localhost:11434` | Local runtime            |
+
+## Example file
+
+```dotenv title=".env"
+ZEPHYRUS_HOST=0.0.0.0
+ZEPHYRUS_PORT=7000
+ZEPHYRUS_DATA_DIR=./data
+
+OLLAMA_BASE_URL=http://localhost:11434
+DEFAULT_MODEL=llama3.1:8b
+
+EMBEDDING_PROVIDER=ollama
+EMBEDDING_MODEL=nomic-embed-text
+```
+
+<Callout title="Cloud keys are optional" type="info">
+  1.0.x supports OpenAI, Anthropic and Gemini keys. A provider only appears in the
+  composer when its key is present.
+</Callout>
+
+## Storage
+
+| Path               | Contents                   |
+| ------------------ | -------------------------- |
+| `data/zephyrus.db` | Conversations and settings |
+| `data/uploads/`    | Uploaded files             |
+| `data/chroma/`     | Vector embeddings          |
+| `data/logs/`       | Application logs           |
+
+Back up the entire `data/` directory, not just the database.
+
+## Related
+
+- [1.0.x getting started](/docs/v1/getting-started)
+- [Current configuration reference](/docs/configuration)

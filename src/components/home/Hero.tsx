@@ -1,10 +1,10 @@
 "use client";
 
 import { Fragment, useRef, type CSSProperties, type MouseEvent } from "react";
+import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Nav } from "@/components/home/Nav";
 import { CountUp } from "@/components/ui/CountUp";
-import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Icon, icons, moduleIcons } from "@/components/ui/Icon";
 import { useSmoothScroll } from "@/components/providers/SmoothScrollProvider";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -111,14 +111,10 @@ export function Hero() {
             <br />
             for agents, memory and research.
           </p>
-          <ExternalLink
-            className="book-btn rise"
-            href={siteConfig.docs}
-            showArrow
-            style={riseStyle(0)}
-          >
+          <Link className="book-btn rise" href={siteConfig.docs} style={riseStyle(0)}>
             Read the Docs
-          </ExternalLink>
+            <Icon icon={icons.arrowUp} className="arrow-ne" />
+          </Link>
         </div>
       </div>
 

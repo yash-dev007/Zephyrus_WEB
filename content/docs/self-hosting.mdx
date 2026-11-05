@@ -1,0 +1,82 @@
+---
+title: Self-hosting
+description: Run Zephyrus on a server, behind a reverse proxy, with backups and updates.
+---
+
+Zephyrus is designed to run on a single machine you control. A small VPS or a
+home server is enough for personal use; add RAM and disk for larger local
+models.
+
+## Deployment shape
+
+<Files>
+  <Folder name="host">
+    <File name="docker-compose.yml" />
+    <File name=".env" />
+    <File name="data/" />
+    <File name="Caddyfile" />
+  </Folder>
+</Files>
+
+Only the web process needs to be exposed. The API, vector store and model
+runtime stay on the private network.
+
+## Reverse proxy
+
+Terminate TLS at a proxy and forward to port `7000`. Example Caddy config:
+
+```text title="Caddyfile"
+docs.example.com {
+  reverse_proxy 127.0.0.1:7000
+}
+```
+
+<Callout title="Do not expose the API directly" type="warn">
+  The API trusts local requests. Put authentication in front of the workspace before
+  exposing it to the internet, and keep the model runtime private.
+</Callout>
+
+## Backups
+
+Back up the entire `data/` directory on a schedule:
+
+```bash title="Terminal"
+tar -czf zephyrus-$(date +%F).tar.gz data/
+```
+
+Keep at least one copy off the host. Test restoring into a fresh directory
+before you need it.
+
+## Updates
+
+```bash title="Terminal"
+git pull
+docker compose up -d --build
+```
+
+Migrations run at startup. For major versions:
+
+1. Read the release notes.
+2. Back up `data/`.
+3. Pull and rebuild.
+4. Check `/api/health` and the logs.
+
+## Resource planning
+
+| Workload                | RAM   | Disk   |
+| ----------------------- | ----- | ------ |
+| Chat only, cloud models | 2 GB  | 5 GB   |
+| Local 7B model          | 12 GB | 20 GB  |
+| Local 13B model         | 24 GB | 40 GB  |
+| Documents and research  | +4 GB | +10 GB |
+
+Embeddings and uploads grow with use. Monitor disk before it fills; a full disk
+will stop the database.
+
+## Hardening checklist
+
+- Put TLS and authentication in front of the workspace.
+- Restrict `.env` permissions.
+- Keep the model runtime on a private interface.
+- Disable unused MCP servers.
+- Review logs for unexpected outbound requests.
