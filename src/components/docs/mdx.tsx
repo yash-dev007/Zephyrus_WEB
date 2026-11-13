@@ -3,6 +3,7 @@ import type { MDXComponents } from "mdx/types";
 import { Callout, Card, Cards, MDXLink } from "./mdx-primitives";
 import { CodeBlock } from "./CodeBlock";
 import { Tab, Tabs } from "./Tabs";
+import { Mermaid } from "./Mermaid";
 
 export function Steps({ children }: { children: ReactNode }) {
   return <div className="docs-steps">{children}</div>;
@@ -48,6 +49,7 @@ export function getMDXComponents(components?: MDXComponents) {
     Files,
     Folder,
     File,
+    Mermaid,
     ...components,
   } satisfies MDXComponents;
 }
