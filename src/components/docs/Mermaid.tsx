@@ -8,7 +8,10 @@ function extractText(node: ReactNode): string {
   if (typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(extractText).join("");
   if (typeof node === "object" && node !== null) {
-    const maybeLazy = node as { _init?: (payload: unknown) => unknown; _payload?: unknown };
+    const maybeLazy = node as {
+      _init?: (payload: unknown) => unknown;
+      _payload?: unknown;
+    };
     if (typeof maybeLazy._init === "function") {
       try {
         const resolved = maybeLazy._init(maybeLazy._payload) as ReactNode;
@@ -109,7 +112,9 @@ export function Mermaid({ chart, children }: { chart?: string; children?: ReactN
     return (
       <div className="docs-mermaid-error">
         <p className="text-xs text-red-400">Failed to render architecture diagram</p>
-        <pre className="text-xs text-muted-foreground mt-2 overflow-x-auto">{cleanChart}</pre>
+        <pre className="text-xs text-muted-foreground mt-2 overflow-x-auto">
+          {cleanChart}
+        </pre>
       </div>
     );
   }
@@ -122,10 +127,5 @@ export function Mermaid({ chart, children }: { chart?: string; children?: ReactN
     );
   }
 
-  return (
-    <div
-      className="docs-mermaid"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
-  );
+  return <div className="docs-mermaid" dangerouslySetInnerHTML={{ __html: svg }} />;
 }

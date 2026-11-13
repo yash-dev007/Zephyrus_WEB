@@ -1,6 +1,12 @@
 "use client";
 
-import { isValidElement, useRef, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import {
+  isValidElement,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+} from "react";
 import { Mermaid } from "./Mermaid";
 
 function extractCodeText(node: ReactNode): string {
@@ -9,7 +15,10 @@ function extractCodeText(node: ReactNode): string {
   if (typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(extractCodeText).join("");
   if (typeof node === "object" && node !== null) {
-    const maybeLazy = node as { _init?: (payload: unknown) => unknown; _payload?: unknown };
+    const maybeLazy = node as {
+      _init?: (payload: unknown) => unknown;
+      _payload?: unknown;
+    };
     if (typeof maybeLazy._init === "function") {
       try {
         const resolved = maybeLazy._init(maybeLazy._payload) as ReactNode;
@@ -18,8 +27,15 @@ function extractCodeText(node: ReactNode): string {
         // Fall through
       }
     }
-    if (isValidElement(node) && node.props && typeof node.props === "object" && "children" in node.props) {
-      return extractCodeText((node.props as Record<string, unknown>).children as ReactNode);
+    if (
+      isValidElement(node) &&
+      node.props &&
+      typeof node.props === "object" &&
+      "children" in node.props
+    ) {
+      return extractCodeText(
+        (node.props as Record<string, unknown>).children as ReactNode,
+      );
     }
   }
   return "";

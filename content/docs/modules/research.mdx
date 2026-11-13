@@ -15,27 +15,27 @@ Plan -> Think -> Search -> Extract -> Synthesize -> Decide -> Report
 
 ## Core Capabilities
 
-| Capability | Status | Description |
-| --- | --- | --- |
-| Multi-round research loop | Implemented | Autonomous planning, search, extraction, synthesis, and stopping cycle |
-| Query planning | Implemented | Structured sub-questions and key topics generated before the first search |
-| Dynamic query generation | Implemented | Round-by-round queries tailored to current findings with deduplication |
-| Search provider chain | Implemented | Searches SearXNG, DuckDuckGo, Brave, Tavily, Google, or Serper with fallbacks |
-| Concurrent extraction | Implemented | Parallel page fetching with semaphore-bounded LLM content extraction |
-| Content filtering | Implemented | Automated removal of navigation boilerplate, ads, and low-quality summaries |
-| Format classification | Implemented | Auto-detection of report styles: product, comparison, how-to, or fact-check |
-| Model-guided stopping | Implemented | LLM evaluates report completeness once minimum rounds are reached |
-| Length validation | Implemented | Automatic expansion call if the final draft falls below 400 words |
-| Follow-up continuation | Implemented | Chat sessions can continue prior research without re-fetching visited URLs |
-| Background task runner | Implemented | Async tasks run independently of browser connections and survive page refreshes |
-| Live SSE stream | Implemented | Server-Sent Events deliver real-time phase, round, query, and source updates |
-| Partial result salvage | Implemented | Timeouts or errors salvage the evolving draft into a usable report |
-| User isolation | Implemented | Reports are scoped by owner with 404 responses on cross-user lookups |
-| HTML visual report | Implemented | Standalone visual reports with hero images, metrics bar, and source viewer |
-| Report Library | Implemented | Searchable storage with filtering, sorting, archiving, and deletion |
-| Chat spinoff | Implemented | One-click button to seed a new conversation with a completed report |
-| Agent tool integration | Implemented | Tools `trigger_research` and `manage_research` allow autonomous invocation |
-| Scheduled research | Implemented | Unattended execution via the Zephyrus task scheduler |
+| Capability                | Status      | Description                                                                     |
+| ------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| Multi-round research loop | Implemented | Autonomous planning, search, extraction, synthesis, and stopping cycle          |
+| Query planning            | Implemented | Structured sub-questions and key topics generated before the first search       |
+| Dynamic query generation  | Implemented | Round-by-round queries tailored to current findings with deduplication          |
+| Search provider chain     | Implemented | Searches SearXNG, DuckDuckGo, Brave, Tavily, Google, or Serper with fallbacks   |
+| Concurrent extraction     | Implemented | Parallel page fetching with semaphore-bounded LLM content extraction            |
+| Content filtering         | Implemented | Automated removal of navigation boilerplate, ads, and low-quality summaries     |
+| Format classification     | Implemented | Auto-detection of report styles: product, comparison, how-to, or fact-check     |
+| Model-guided stopping     | Implemented | LLM evaluates report completeness once minimum rounds are reached               |
+| Length validation         | Implemented | Automatic expansion call if the final draft falls below 400 words               |
+| Follow-up continuation    | Implemented | Chat sessions can continue prior research without re-fetching visited URLs      |
+| Background task runner    | Implemented | Async tasks run independently of browser connections and survive page refreshes |
+| Live SSE stream           | Implemented | Server-Sent Events deliver real-time phase, round, query, and source updates    |
+| Partial result salvage    | Implemented | Timeouts or errors salvage the evolving draft into a usable report              |
+| User isolation            | Implemented | Reports are scoped by owner with 404 responses on cross-user lookups            |
+| HTML visual report        | Implemented | Standalone visual reports with hero images, metrics bar, and source viewer      |
+| Report Library            | Implemented | Searchable storage with filtering, sorting, archiving, and deletion             |
+| Chat spinoff              | Implemented | One-click button to seed a new conversation with a completed report             |
+| Agent tool integration    | Implemented | Tools `trigger_research` and `manage_research` allow autonomous invocation      |
+| Scheduled research        | Implemented | Unattended execution via the Zephyrus task scheduler                            |
 
 ## System Architecture
 
@@ -103,7 +103,6 @@ flowchart TB
     Panel -->|"GET /api/research/report"| Routes
 ```
 
-
 ### Key Architectural Principles
 
 1. **Background task registry:** `start_research` creates an independent `asyncio.Task` and returns immediately with a session identifier. If the user closes their browser or navigates away, the research run continues on the server. The client reattaches to running jobs via `/api/research/active` and the SSE event stream.
@@ -166,38 +165,58 @@ sequenceDiagram
     Requests to `/api/research/start` require the `can_use_research` privilege. When called by internal agent tools, the handler validates the `X-Zephyrus-Owner` header against the human user's permissions to prevent privilege escalation.
   </Step>
 
-  <Step title="2. Endpoint resolution">
-    The system resolves the model endpoint in order: explicit request override, `research_endpoint_id` setting, `utility` endpoint, default workspace endpoint, chat endpoint, or the user's first enabled endpoint.
-  </Step>
+<Step title="2. Endpoint resolution">
+  The system resolves the model endpoint in order: explicit request override,
+  `research_endpoint_id` setting, `utility` endpoint, default workspace endpoint, chat
+  endpoint, or the user's first enabled endpoint.
+</Step>
 
-  <Step title="3. Endpoint probe">
-    Before launching long searches, the handler executes a lightweight probe call (15-second timeout) to verify that the selected model is reachable and credentials are valid. If the probe fails, the system logs an actionable error and halts before consuming search quota.
-  </Step>
+<Step title="3. Endpoint probe">
+  Before launching long searches, the handler executes a lightweight probe call (15-second
+  timeout) to verify that the selected model is reachable and credentials are valid. If
+  the probe fails, the system logs an actionable error and halts before consuming search
+  quota.
+</Step>
 
-  <Step title="4. Strategy planning">
-    The planner executes `RESEARCH_PLAN_PROMPT`. The model decomposes the question into three to six sub-questions, key topics, and a concrete success criterion. This plan is flattened and injected into all subsequent query generation calls.
-  </Step>
+<Step title="4. Strategy planning">
+  The planner executes `RESEARCH_PLAN_PROMPT`. The model decomposes the question into
+  three to six sub-questions, key topics, and a concrete success criterion. This plan is
+  flattened and injected into all subsequent query generation calls.
+</Step>
 
-  <Step title="5. Category classification">
-    A fast zero-temperature classification call identifies whether the target question fits a specific structure: `product`, `comparison`, `howto`, or `factcheck`. The detected category applies dedicated formatting requirements to the final report. General queries fall back to standard synthesis.
-  </Step>
+<Step title="5. Category classification">
+  A fast zero-temperature classification call identifies whether the target question fits
+  a specific structure: `product`, `comparison`, `howto`, or `factcheck`. The detected
+  category applies dedicated formatting requirements to the final report. General queries
+  fall back to standard synthesis.
+</Step>
 
-  <Step title="6. The round loop">
-    Each round executes five sequential phases:
-    - **Think:** The model inspects the initial plan, what has been learned so far, and the current round number to generate search queries (four in round 1, three in subsequent rounds).
-    - **Search:** The queries execute concurrently against the active provider chain. Results include titles, snippets, and target URLs.
-    - **Extract:** Each unseen URL is fetched in a worker thread (up to 15,000 characters). The model extracts a rational, factual evidence, and a brief summary. Extractions run concurrently under an `asyncio.Semaphore`.
-    - **Filter:** Summaries matching boilerplate markers (cookie banners, access blocks, empty responses) are dropped.
-    - **Synthesize:** The model updates the evolving report by integrating findings from the current round with earlier findings.
-  </Step>
+<Step title="6. The round loop">
+  Each round executes five sequential phases: - **Think:** The model inspects the initial
+  plan, what has been learned so far, and the current round number to generate search
+  queries (four in round 1, three in subsequent rounds). - **Search:** The queries execute
+  concurrently against the active provider chain. Results include titles, snippets, and
+  target URLs. - **Extract:** Each unseen URL is fetched in a worker thread (up to 15,000
+  characters). The model extracts a rational, factual evidence, and a brief summary.
+  Extractions run concurrently under an `asyncio.Semaphore`. - **Filter:** Summaries
+  matching boilerplate markers (cookie banners, access blocks, empty responses) are
+  dropped. - **Synthesize:** The model updates the evolving report by integrating findings
+  from the current round with earlier findings.
+</Step>
 
-  <Step title="7. Model-guided stop decision">
-    Once the run reaches `min_rounds` (calculated as `max(2, max_rounds - 2)`), the engine queries the model with `STOP_PROMPT`. If the model responds with YES, the loop terminates early. Otherwise, research continues until reaching `max_rounds` or the time budget.
-  </Step>
+<Step title="7. Model-guided stop decision">
+  Once the run reaches `min_rounds` (calculated as `max(2, max_rounds - 2)`), the engine
+  queries the model with `STOP_PROMPT`. If the model responds with YES, the loop
+  terminates early. Otherwise, research continues until reaching `max_rounds` or the time
+  budget.
+</Step>
 
-  <Step title="8. Final report compilation and expansion">
-    The engine passes all gathered findings, source citations, and category formatting rules to `FINAL_REPORT_PROMPT`, requesting a structured report of at least 1,500 words with inline markdown links. If the resulting text is shorter than 400 words, an automated expansion pass retries with higher temperature.
-  </Step>
+<Step title="8. Final report compilation and expansion">
+  The engine passes all gathered findings, source citations, and category formatting rules
+  to `FINAL_REPORT_PROMPT`, requesting a structured report of at least 1,500 words with
+  inline markdown links. If the resulting text is shorter than 400 words, an automated
+  expansion pass retries with higher temperature.
+</Step>
 
   <Step title="9. Persistence and event notification">
     The handler attaches a summary header with duration, round count, query count, and analyzed URLs. It writes the record to `data/deep_research/<session_id>.json`, dispatches the `research_completed` event across the internal bus, and closes the SSE stream.
@@ -208,30 +227,30 @@ sequenceDiagram
 
 The research loop stops when any of the following triggers occurs:
 
-| Trigger | Evaluation Point | Behavior |
-| --- | --- | --- |
-| Cancellation requested | Start of round | Halts immediately and returns the latest evolving draft |
-| Cooperative budget exceeded | Start of round | If elapsed time exceeds `max_time`, the loop exits cleanly |
-| No queries generated | Query generation | If the model produces no valid queries, the loop exits |
-| Consecutive empty searches | Extraction phase | If two consecutive rounds find no new URLs, the loop terminates |
-| Model stop decision | End of round | When `round >= min_rounds` and the model returns YES |
-| Maximum rounds reached | End of round | Loop terminates when `round == max_rounds` |
-| Hard task timeout | Global ceiling | `asyncio.wait_for` fires, salvaging the evolving report if available |
+| Trigger                     | Evaluation Point | Behavior                                                             |
+| --------------------------- | ---------------- | -------------------------------------------------------------------- |
+| Cancellation requested      | Start of round   | Halts immediately and returns the latest evolving draft              |
+| Cooperative budget exceeded | Start of round   | If elapsed time exceeds `max_time`, the loop exits cleanly           |
+| No queries generated        | Query generation | If the model produces no valid queries, the loop exits               |
+| Consecutive empty searches  | Extraction phase | If two consecutive rounds find no new URLs, the loop terminates      |
+| Model stop decision         | End of round     | When `round >= min_rounds` and the model returns YES                 |
+| Maximum rounds reached      | End of round     | Loop terminates when `round == max_rounds`                           |
+| Hard task timeout           | Global ceiling   | `asyncio.wait_for` fires, salvaging the evolving report if available |
 
 ### Default Timeouts
 
-| Call Type | Default | Configurable Setting |
-| --- | --- | --- |
-| Endpoint probe | 15s | Fixed |
-| Category classification | 15s | Fixed |
-| Query planning | 90s | `research_planning_timeout_seconds` |
-| Query generation | 90s | `research_query_timeout_seconds` |
-| Web page extraction | 90s | `research_extraction_timeout_seconds` |
-| Report synthesis | 180s | Fixed |
-| Final report generation | 180s | Fixed |
-| Stop decision | 60s | Fixed |
-| Cooperative run budget | 300s | Request body `max_time` (60 to 1800s) |
-| Hard wall-clock cap | 1800s | `research_run_timeout_seconds` (0 disables) |
+| Call Type               | Default | Configurable Setting                        |
+| ----------------------- | ------- | ------------------------------------------- |
+| Endpoint probe          | 15s     | Fixed                                       |
+| Category classification | 15s     | Fixed                                       |
+| Query planning          | 90s     | `research_planning_timeout_seconds`         |
+| Query generation        | 90s     | `research_query_timeout_seconds`            |
+| Web page extraction     | 90s     | `research_extraction_timeout_seconds`       |
+| Report synthesis        | 180s    | Fixed                                       |
+| Final report generation | 180s    | Fixed                                       |
+| Stop decision           | 60s     | Fixed                                       |
+| Cooperative run budget  | 300s    | Request body `max_time` (60 to 1800s)       |
+| Hard wall-clock cap     | 1800s   | `research_run_timeout_seconds` (0 disables) |
 
 ## Data Flow and Storage
 
@@ -366,23 +385,23 @@ The Zephyrus task scheduler (`src/task_scheduler.py`) runs research jobs on recu
 
 The research subsystem exposes 15 dedicated endpoints:
 
-| Method | Endpoint | Description | Access |
-| --- | --- | --- | --- |
-| `POST` | `/api/research/start` | Launch a background research job | `can_use_research` privilege |
-| `GET` | `/api/research/active` | List running research tasks owned by caller | Authenticated user |
-| `GET` | `/api/research/status/{id}` | Read real-time status and metrics | Owner check |
-| `GET` | `/api/research/stream/{id}` | Server-Sent Events live progress stream | Owner check |
-| `POST` | `/api/research/cancel/{id}` | Cancel an active research task | Owner check |
-| `POST` | `/api/research/result/{id}` | Fetch results and mark record consumed | Owner check |
-| `POST` | `/api/research/result-peek/{id}` | Fetch results without marking consumed | Owner check |
-| `GET` | `/api/research/report/{id}` | Render standalone HTML visual report | Owner check |
-| `GET` | `/api/research/library` | Paginated search, sort, and filter of reports | Owner scoped |
-| `GET` | `/api/research/detail/{id}` | Read raw persisted JSON document | Owner check |
-| `POST` | `/api/research/{id}/archive` | Toggle report archived flag | Owner check |
-| `DELETE` | `/api/research/{id}` | Delete report JSON file from disk | Owner check |
-| `POST` | `/api/research/spinoff/{id}` | Create new chat session primed with report | Owner check |
-| `POST` | `/api/research/{id}/hide-image` | Hide specific image URL from visual report | Owner check |
-| `POST` | `/api/research/{id}/unhide-images` | Restore all hidden images in visual report | Owner check |
+| Method   | Endpoint                           | Description                                   | Access                       |
+| -------- | ---------------------------------- | --------------------------------------------- | ---------------------------- |
+| `POST`   | `/api/research/start`              | Launch a background research job              | `can_use_research` privilege |
+| `GET`    | `/api/research/active`             | List running research tasks owned by caller   | Authenticated user           |
+| `GET`    | `/api/research/status/{id}`        | Read real-time status and metrics             | Owner check                  |
+| `GET`    | `/api/research/stream/{id}`        | Server-Sent Events live progress stream       | Owner check                  |
+| `POST`   | `/api/research/cancel/{id}`        | Cancel an active research task                | Owner check                  |
+| `POST`   | `/api/research/result/{id}`        | Fetch results and mark record consumed        | Owner check                  |
+| `POST`   | `/api/research/result-peek/{id}`   | Fetch results without marking consumed        | Owner check                  |
+| `GET`    | `/api/research/report/{id}`        | Render standalone HTML visual report          | Owner check                  |
+| `GET`    | `/api/research/library`            | Paginated search, sort, and filter of reports | Owner scoped                 |
+| `GET`    | `/api/research/detail/{id}`        | Read raw persisted JSON document              | Owner check                  |
+| `POST`   | `/api/research/{id}/archive`       | Toggle report archived flag                   | Owner check                  |
+| `DELETE` | `/api/research/{id}`               | Delete report JSON file from disk             | Owner check                  |
+| `POST`   | `/api/research/spinoff/{id}`       | Create new chat session primed with report    | Owner check                  |
+| `POST`   | `/api/research/{id}/hide-image`    | Hide specific image URL from visual report    | Owner check                  |
+| `POST`   | `/api/research/{id}/unhide-images` | Restore all hidden images in visual report    | Owner check                  |
 
 #### Example: Start and Stream
 
@@ -445,42 +464,46 @@ The Library tab organizes saved reports for quick access and historical retrieva
 
 The engine relies on seven prompt templates. There is no proprietary function calling or JSON mode flag required; prompts specify explicit schemas in text, and custom parsers extract the structured results.
 
-| Template | Role | Sampling | Output Contract | Parser |
-| --- | --- | --- | --- | --- |
-| `RESEARCH_PLAN_PROMPT` | User | temp 0.3, 1024 tokens | JSON object with `sub_questions`, `key_topics`, `success_criteria` | Lenient JSON parser |
-| Classification prompt | User | temp 0.0, 20 tokens | One token: `product`, `comparison`, `howto`, or `factcheck` | Exact match scanner |
-| `QUERY_GEN_PROMPT` | User | temp 0.5, 4096 tokens | JSON array of search strings | `_parse_json_array` |
-| `EXTRACTOR_SYSTEM` | User | temp 0.2, 2048 tokens | JSON object with `rational`, `evidence`, `summary` | `_parse_json_object` with raw fallback |
-| `SYNTHESIZE_PROMPT` | User | temp 0.3, max tokens | Updated long-form markdown report | Thinking-block stripper |
-| `STOP_PROMPT` | User | temp 0.1, 128 tokens | `YES` or `NO` followed by reasoning | Leading-token validator |
-| `FINAL_REPORT_PROMPT` | User | temp 0.3, max tokens | Markdown report, minimum 1500 words, inline citations | Word count validator (triggers expansion if under 400 words) |
+| Template               | Role | Sampling              | Output Contract                                                    | Parser                                                       |
+| ---------------------- | ---- | --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ |
+| `RESEARCH_PLAN_PROMPT` | User | temp 0.3, 1024 tokens | JSON object with `sub_questions`, `key_topics`, `success_criteria` | Lenient JSON parser                                          |
+| Classification prompt  | User | temp 0.0, 20 tokens   | One token: `product`, `comparison`, `howto`, or `factcheck`        | Exact match scanner                                          |
+| `QUERY_GEN_PROMPT`     | User | temp 0.5, 4096 tokens | JSON array of search strings                                       | `_parse_json_array`                                          |
+| `EXTRACTOR_SYSTEM`     | User | temp 0.2, 2048 tokens | JSON object with `rational`, `evidence`, `summary`                 | `_parse_json_object` with raw fallback                       |
+| `SYNTHESIZE_PROMPT`    | User | temp 0.3, max tokens  | Updated long-form markdown report                                  | Thinking-block stripper                                      |
+| `STOP_PROMPT`          | User | temp 0.1, 128 tokens  | `YES` or `NO` followed by reasoning                                | Leading-token validator                                      |
+| `FINAL_REPORT_PROMPT`  | User | temp 0.3, max tokens  | Markdown report, minimum 1500 words, inline citations              | Word count validator (triggers expansion if under 400 words) |
 
 <Callout title="Date context injection" type="info">
-  To prevent models from defaulting to their pre-training cutoff years when generating search queries, `RESEARCH_PLAN_PROMPT` and `QUERY_GEN_PROMPT` automatically inject `current_date_context()`. This ensures query strings target the current year and real-world timelines.
+  To prevent models from defaulting to their pre-training cutoff years when generating
+  search queries, `RESEARCH_PLAN_PROMPT` and `QUERY_GEN_PROMPT` automatically inject
+  `current_date_context()`. This ensures query strings target the current year and
+  real-world timelines.
 </Callout>
 
 ## Configuration Reference
 
 Settings are stored in `data/settings.json` and configurable in the Settings interface:
 
-| Key | Type | Default | Description |
-| --- | --- | --- | --- |
-| `research_endpoint_id` | string | `""` | Dedicated endpoint ID for research. Empty string uses the standard fallback chain |
-| `research_model` | string | `""` | Model name override for research tasks |
-| `research_search_provider` | string | `""` | Provider for research searches (overrides general `search_provider`) |
-| `research_max_tokens` | integer | `16384` | Maximum tokens for synthesis and final report generation |
-| `research_extraction_timeout_seconds` | integer | `90` | Per-page extraction timeout (clamped between 15 and 3600 seconds) |
-| `research_planning_timeout_seconds` | integer | `90` | Timeout for the initial planning call |
-| `research_query_timeout_seconds` | integer | `90` | Timeout for round query generation |
-| `research_extraction_concurrency` | integer | `3` | Max simultaneous page extractions (clamped between 1 and 12) |
-| `research_run_timeout_seconds` | integer | `1800` | Hard ceiling for a research run. Set to `0` to disable the ceiling |
-| `search_provider` | string | `"searxng"` | Global default search provider |
-| `search_fallback_chain` | list | `["duckduckgo"]` | Providers called sequentially when the primary provider returns no results |
-| `search_safesearch` | string | `"strict"` | SafeSearch level passed to providers supporting content filters |
+| Key                                   | Type    | Default          | Description                                                                       |
+| ------------------------------------- | ------- | ---------------- | --------------------------------------------------------------------------------- |
+| `research_endpoint_id`                | string  | `""`             | Dedicated endpoint ID for research. Empty string uses the standard fallback chain |
+| `research_model`                      | string  | `""`             | Model name override for research tasks                                            |
+| `research_search_provider`            | string  | `""`             | Provider for research searches (overrides general `search_provider`)              |
+| `research_max_tokens`                 | integer | `16384`          | Maximum tokens for synthesis and final report generation                          |
+| `research_extraction_timeout_seconds` | integer | `90`             | Per-page extraction timeout (clamped between 15 and 3600 seconds)                 |
+| `research_planning_timeout_seconds`   | integer | `90`             | Timeout for the initial planning call                                             |
+| `research_query_timeout_seconds`      | integer | `90`             | Timeout for round query generation                                                |
+| `research_extraction_concurrency`     | integer | `3`              | Max simultaneous page extractions (clamped between 1 and 12)                      |
+| `research_run_timeout_seconds`        | integer | `1800`           | Hard ceiling for a research run. Set to `0` to disable the ceiling                |
+| `search_provider`                     | string  | `"searxng"`      | Global default search provider                                                    |
+| `search_fallback_chain`               | list    | `["duckduckgo"]` | Providers called sequentially when the primary provider returns no results        |
+| `search_safesearch`                   | string  | `"strict"`       | SafeSearch level passed to providers supporting content filters                   |
 
 ### Engine Constants
 
 Four core parameters are fixed within the engine:
+
 - `max_urls_per_round = 3`: Maximum new URLs fetched per search query in each round.
 - `max_content_chars = 15000`: Character truncation threshold for fetched web pages.
 - `max_empty_rounds = 2`: Number of consecutive empty rounds permitted before terminating search.
@@ -539,6 +562,7 @@ Web pages fetched during research contain untrusted third-party text. The subsys
 ### Resource Demands
 
 Each research run executes multiple LLM calls:
+
 - 1 probe call
 - 1 planning call
 - 1 classification call (initial run only)
@@ -550,17 +574,19 @@ For an 8-round run, the engine can execute between 30 and 60 individual LLM call
 ### Operational Tuning
 
 <Callout title="Local GPU tuning" type="tip">
-  When running against a local model server (such as Ollama or vLLM on a single GPU), set `research_extraction_concurrency` to `1` or `2`. Local servers serialize requests on one GPU; high concurrency queues requests and triggers extraction timeouts.
+  When running against a local model server (such as Ollama or vLLM on a single GPU), set
+  `research_extraction_concurrency` to `1` or `2`. Local servers serialize requests on one
+  GPU; high concurrency queues requests and triggers extraction timeouts.
 </Callout>
 
-| Operational Symptom | Recommended Adjustment |
-| --- | --- |
-| Extractions repeatedly time out | Increase `research_extraction_timeout_seconds` to 180s or reduce extraction concurrency to 1 |
-| Local server slows down or drops requests | Reduce `research_extraction_concurrency` to 1 or 2 |
-| Reports are cut off mid-paragraph | Increase `research_max_tokens` from 16384 to 32768 |
-| Runs end prematurely after 2 rounds | Increase `max_time` in the request body (default is 300s) |
-| Search returns empty results | Configure a reliable provider in `research_search_provider` and verify `search_fallback_chain` |
-| Long runs terminate at exactly 30 minutes | Increase `research_run_timeout_seconds` or set to `0` to disable the hard cap |
+| Operational Symptom                       | Recommended Adjustment                                                                         |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Extractions repeatedly time out           | Increase `research_extraction_timeout_seconds` to 180s or reduce extraction concurrency to 1   |
+| Local server slows down or drops requests | Reduce `research_extraction_concurrency` to 1 or 2                                             |
+| Reports are cut off mid-paragraph         | Increase `research_max_tokens` from 16384 to 32768                                             |
+| Runs end prematurely after 2 rounds       | Increase `max_time` in the request body (default is 300s)                                      |
+| Search returns empty results              | Configure a reliable provider in `research_search_provider` and verify `search_fallback_chain` |
+| Long runs terminate at exactly 30 minutes | Increase `research_run_timeout_seconds` or set to `0` to disable the hard cap                  |
 
 ## Developer Integration and Extension
 
